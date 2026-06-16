@@ -1,0 +1,23 @@
+`ifndef GEN1
+`define GEN1
+`include "trans.sv"
+`include "generator.sv"
+class reset_check extends generator;
+  mailbox gen2drv;
+  trans tr;
+  function new(mailbox gen2drv);
+    this.gen2drv = gen2drv;
+  endfunction
+  
+  task run();
+    repeat(5)
+      begin
+        tr=new();
+        if(!tr.randomize() with {PRESETn==0})
+          $display("Randomization Failed");
+        else
+          gen2drv.put(tr);
+      end
+  endtask
+endclass
+`endif

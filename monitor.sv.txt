@@ -1,0 +1,44 @@
+`ifndef MON
+`define MON
+`include "interface.sv"
+`include "trans.sv"
+
+class monitor;
+  trans tr;
+  virtual intf inf;
+  mailbox mon2scb;
+  
+  function new(virtual intf inf, mailbox mon2scb);
+    this.inf = inf;
+    this.mon2scb = mon2scb;
+  endfunction
+  
+  task run();
+    forever begin
+      @(posedge inf.PCLK)
+      
+      if(inf.PSEL && inf.PENABLE && inf.PREADY) begin
+        tr = new();
+        get_from_dut();
+        mon2scb.put(tr);
+        $display("[MON] Captured Transaction: ADDR=%0h, WRITE=%0b, WDATA=%0h, RDATA=%0h", tr.PADDR, tr.PWRITE, tr.PWDATA, tr.PRDATA);
+        end
+    end
+  endtask
+  
+  task get_from_dut();
+  	tr.PADDR = inf.PADDR;
+    tr.PWRITE = inf.PWRITE;
+    tr.PWDATA = inf.PWDATA;
+    tr.PSEL = inf.PSEL;
+    tr.PENABLE = inf.PENABLE;
+    
+    @(posedge inf.PCLK);
+    #1;
+    if(!tr.PWRITE)
+      tr.PRDATA = inf.PRDATA;
+    tr.PSLVERR = inf.PSLVERR;
+    tr.PREADY = inf.PREADY;
+  endtask
+endclass
+`endif

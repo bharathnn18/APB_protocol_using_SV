@@ -1,0 +1,49 @@
+`ifndef DRV
+`define DRV
+`include "interface.sv"
+`include "trans.sv"
+
+class driver;
+  mailbox gen2drv;
+  trans tr;
+  virtual intf inf;
+  
+  function new(mailbox gen2drv, virtual intf inf);
+    this.gen2drv = gen2drv;
+    this.inf = inf;
+  endfunction
+  
+  task run();
+    forever begin
+      gen2drv.get(tr);
+      send_to_dut(tr);
+    end
+  endtask
+  
+  task send_to_dut(trans tr);
+    @(posedge inf.PCLK);
+    
+    // SETUP PHASE
+    inf.PSEL <= 1'b1;
+    inf.PENABLE <= 1'b0;
+    inf.PADDR <= tr.PADDR;
+    inf.PWRITE <= tr.PWRITE;
+    inf.PWDATA <= tr.PWDATA;
+    inf.PRESETn <= tr.PRESETn;
+    
+    // ENABLE PHASE
+    @(posedge inf.PCLK);
+    inf.PENABLE <= 1'b1;
+    
+    wait(inf.PREADY == 1);
+    
+    if(!tr.PWRITE) begin
+      tr.PRDATA = inf.PRDATA;
+      $display("[DRV] Read Data from dut: %0h", tr.PRDATA);
+    end else begin
+      $display("[DRV] Write Data sent: %0h", tr.PWDATA);
+    end
+    
+  endtask
+endclass
+`endif

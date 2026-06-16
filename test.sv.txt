@@ -1,0 +1,28 @@
+`ifdef TEST
+`define TEST
+`include "interface.sv"
+`include "env.sv"
+
+class test;
+  env e1;
+  virtual intf inf;
+  int testcase_id;
+  
+  function new(virtual intf inf);
+    this.inf = inf;
+    e1 = new(inf);
+  endfunction
+  
+  task run();
+    if(!$value$plusargs("TESTCASE=%0d ", testcase_id))
+      testcase_id = 3;
+    $display("\n=======================");
+    $display("Running TESTCASE ID = %0d", testcase_id);
+    $display("\n=======================");
+    
+    e1.testcase_select = testcase_id;
+    
+    e1.run();
+  endtask
+endclass
+`endif

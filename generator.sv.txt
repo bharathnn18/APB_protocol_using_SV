@@ -1,0 +1,10 @@
+// this generator class is empty because it is overridden for different cases.
+`ifndef GEN
+`define GEN
+`include "trans.sv"
+virtual class generator;
+  function new();
+  endfunction
+  pure virtual task run();
+endclass
+`endif

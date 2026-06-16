@@ -1,0 +1,26 @@
+`ifndef GEN4
+`define GEN4
+`include "trans.sv"
+`include "generator.sv"
+
+class sim_wr extends generator;
+  mailbox gen2drv;
+  trans tr;
+  
+  function new(mailbox gen2drv)
+  	this.gen2drv = gen2drv;
+  endfunction
+  
+  task run();
+    repeat(10) begin
+      tr=new();
+      if(!tr.randomize() with {PRESETn == 1}) begin
+        $display("Randomization Failed");
+      end else begin
+        gen2drv.put(tr);
+        $display("[GEN] Generated Read transcation: %0p", tr);
+      end
+    end
+  endtask
+endclass
+`endif

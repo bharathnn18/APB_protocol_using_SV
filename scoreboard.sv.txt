@@ -1,0 +1,44 @@
+`ifndef SCB
+`define SCB
+`include "interface.sv"
+`include "trans.sv"
+
+class scoreboard;
+  trans tr;
+  trans exp_tr;
+  mailbox mon2scb;
+  
+  bit [7:0] mem [bit [7:0]];
+  
+  function new(mailbox mon2scb);
+    this.mon2scb = mon2scb;
+    endfunction
+  
+  task run();
+    forever begin
+      mon2scb.get)tr);
+      exp_tr = new();
+      
+      exp_tr.PADDR = tr.PADDR;
+      exp_tr.PWDATA = tr.PWDATA;
+      exp_tr.PWRITE = tr.PWRITE;
+      
+      if(tr.PWRITE) begin
+        mem[tr.PADDR] = tr.PWDATA;
+        $display("[SCB] WRITE: ADDR=%0h DATA=%0h", tr.PADDR, tr.PWDATA);
+      end
+      else begin
+        exp_tr.PRDATA = mem.exists(tr.PADDR ? mem[tr.PADDR]: 'hx;
+        compare(tr, exp_tr);
+      end
+    end
+  endtask
+                                   
+  task compare(trans tr, trans exp_tr);
+    if(tr.PRDATA === exp_tr.PRDATA)
+      $display("[SCB] PASS: ADDR=%0h EXP=%0h GOT=%0h", tr.PADDR, exp_tr.PADDR, tr.PRDATA);
+    else
+      $display("[SCB] FAIL: ADDR=%0h EXP=%0h GOT=%0h", tr.PADDR, exp_tr.PRDATA, tr.PRDATA);
+  endtask            
+endclass
+`endif 
